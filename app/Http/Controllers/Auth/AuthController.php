@@ -23,7 +23,7 @@ class AuthController extends Controller
             'ape_pat' => 'required|string',
             'ape_mat' => 'required|string',
             'tipoid' => 'required', // Tipo numero documento
-            'numero' => 'required|string', // Numero de documero 
+            'numero' => 'required|string', // Numero de documero
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string',
         ]);
@@ -39,10 +39,10 @@ class AuthController extends Controller
                 'telefono' => '',
                 'email' => $request->email,
                 'rol' => '',
-                'usuarioid' => 0, 
-                'ip' => $request->ip(), 
+                'usuarioid' => 0,
+                'ip' => $request->ip(),
                 'estado' => true,
-                'paisid' => 1 
+                'paisid' => 1
             ]);
             $personaid = $persona->personaid;
             PersonaNatural::create([
@@ -86,7 +86,7 @@ class AuthController extends Controller
         ]);
         $user = User::where("email", $request->email)->first();
         if (!empty($user)) {
-            if(Hash::check($request->password, $user->password)){
+            if (Hash::check($request->password, $user->password)) {
                 $token = $user->createToken("mytoken")->accessToken;
                 return response()->json([
                     "status" => true,
@@ -95,7 +95,7 @@ class AuthController extends Controller
                         "token" => $token
                     ]
                 ]);
-            }else{
+            } else {
                 return response()->json([
                     "status" => false,
                     "message" => "Password didn't match",
@@ -109,9 +109,8 @@ class AuthController extends Controller
                 "data" => []
             ]);
         }
-        
-    }  
-    
+    }
+
     public function profile()
     {
         $userData = auth()->user();
@@ -122,7 +121,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(){
+    public function logout()
+    {
         $token = auth()->user()->token();
         $token->revoke();
         return response()->json([
