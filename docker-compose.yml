@@ -2,7 +2,7 @@ services:
   app:
     build:
       args:
-        user: hw
+        user: amaro
         uid: 1000
       context: ./
       dockerfile: Dockerfile
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./:/var/www
     networks:
-      - anet
+      - amaro_net
   nginx:
     image: nginx:alpine
     container_name: nginx-container
@@ -24,7 +24,7 @@ services:
       - ./:/var/www
       - ./docker-compose/nginx:/etc/nginx/conf.d/
     networks:
-      - anet
+      - amaro_net
 networks:
-  anet:
+  amaro_net:
     driver: bridge
