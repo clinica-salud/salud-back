@@ -56,12 +56,16 @@ class CitaController extends Controller
             ->join('salud.especialidad as e', 'e.especialidadid', '=', 'c.especialidadid')
             ->join('basic.edificio as e2', 'e2.edificioid', '=', 'c.edificioid')
             ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'c.estadoid')
-            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'c.pacienteid')
-            ->whereBetween('c.fecha', [$fecha_desde, $fecha_hasta]);
+            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'c.pacienteid');
+
+        if ($fecha_desde && $fecha_hasta) {
+            $results = $results->whereBetween('c.fecha', [$fecha_desde, $fecha_hasta]);
+        }
 
         if ($medicoid) {
             $results = $results->where('c.medicoid', $medicoid);
         }
+
         if ($estadoid) {
             $results = $results->where('c.estadoid', $estadoid);
         }
@@ -88,7 +92,9 @@ class CitaController extends Controller
         $results = DB::table('salud.cita as c')
             ->select(
                 'c.citaid',
+                'co.consultaid',
                 'c.pacienteid',
+                'p.numero as dni_paciente',
                 'pn.ape_pat as ape_pat_paciente',
                 'pn.ape_mat as ape_mat_paciente',
                 'pn.nombre as nombre_paciente',
@@ -115,6 +121,8 @@ class CitaController extends Controller
             ->join('salud.especialidad as e', 'e.especialidadid', '=', 'c.especialidadid')
             ->join('basic.edificio as e2', 'e2.edificioid', '=', 'c.edificioid')
             ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'c.estadoid')
+            ->join('basic.personaid as p', 'p.personaid', '=', 'c.pacienteid')
+            ->join('salud.consulta as co', 'co.citaid', '=', 'c.citaid')
             ->where('c.citaid', $citaid)
             ->first();
 
@@ -163,6 +171,18 @@ class CitaController extends Controller
                 'ip' => 'Dsoft',
             ]);
 
+            $citaid = $jResponse->citaid;
+            $newConsultaid = DB::table('salud.consulta')->max('consultaid') + 1;
+
+            DB::table('salud.consulta')->insert([
+                'consultaid' => $newConsultaid,
+                'registro' => Carbon::now(),
+                'citaid' => $citaid,
+                'anamnesis' => ' ',
+                'usuarioid' => 1,
+                'ip' => '127.0.0.1',
+            ]);
+
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
@@ -176,6 +196,103 @@ class CitaController extends Controller
         return response()->json([
             "status" => true,
             "message" => "Appointment registered successfully",
+            "data" => $jResponse
+        ]);
+    }
+
+    public function updateCita(Request $request, $citaid)
+    {
+        $request->validate([
+            "pacienteid" => 'required|numeric',
+            "tiposervicioid" => 'required|numeric',
+            "medicoid" => 'required|numeric',
+            "especialidadid" => 'required|numeric',
+            "fecha" => 'required',
+            "hora" => 'required',
+            "costo" => 'required|numeric',
+            "observacion" => 'nullable',
+        ]);
+
+        $jResponse = [];
+
+        DB::beginTransaction();
+        try {
+            Cita::where('citaid', $citaid)->update([
+                'pacienteid' => $request->pacienteid,
+                'tiposervicioid' => $request->tiposervicioid,
+                'medicoid' => $request->medicoid,
+                'especialidadid' => $request->especialidadid,
+                'fecha' => $request->fecha,
+                'hora' => $request->hora,
+                'costo' => $request->costo,
+                'estadoid' => 1,
+                'observacion' => $request->observacion,
+
+                // defaults
+                'edificioid' => 1,
+                'referencia' => ' ',
+                'refrenciaid1' => 0,
+                'refrenciaid2' => 0,
+                'usuarioid' => 1,
+                'ip' => 'Dsoft',
+            ]);
+
+            $jResponse = Cita::where('citaid', $citaid)->first();
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' =>  null
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json([
+            "status" => true,
+            "message" => "Appointment updated successfully",
+            "data" => $jResponse
+        ]);
+    }
+
+    public function updateStatusCita(Request $request, $citaid)
+    {
+        $request->validate([
+            "estadoid" => 'required|numeric',
+        ]);
+
+        $jResponse = [];
+
+        DB::beginTransaction();
+        try {
+            Cita::where('citaid', $citaid)->update([
+                'estadoid' => $request->estadoid,
+
+                // defaults
+                'edificioid' => 1,
+                'referencia' => ' ',
+                'refrenciaid1' => 0,
+                'refrenciaid2' => 0,
+                'usuarioid' => 1,
+                'ip' => 'Dsoft',
+            ]);
+
+            $jResponse = Cita::where('citaid', $citaid)->first();
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+                'data' =>  null
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json([
+            "status" => true,
+            "message" => "Appointment updated successfully",
             "data" => $jResponse
         ]);
     }

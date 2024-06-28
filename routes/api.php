@@ -38,6 +38,8 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('appointment', [CitaController::class, 'getCitas']);
         Route::get('appointment/{citaid}', [CitaController::class, 'getCitaById']);
         Route::post('appointment', [CitaController::class, 'addCita']);
+        Route::put('appointment/{citaid}', [CitaController::class, 'updateCita']);
+        Route::patch('appointment/{citaid}/status', [CitaController::class, 'updateStatusCita']);
 
         Route::get('teeth/{tipoodontogramaid}', [OdontogramaController::class, 'getTeeth']);
         Route::get('numero-pieza/{tipoodontogramaid}', [OdontogramaController::class, 'getPiezas']);

@@ -36,13 +36,12 @@ class PersonaController extends Controller
         $dni = $request->dni;
 
         DB::beginTransaction();
-
         try {
             $exists = DB::table('basic.personaid as p')
                 ->select('p.personaid')
                 ->where('p.tipoid', 1)
                 ->where('p.numero', $dni)
-                ->first();
+                ->exists();
 
             if (!$exists) {
                 $apiResponse = self::searchPersona($dni);
@@ -116,7 +115,7 @@ class PersonaController extends Controller
                         'pn.nombre'
                     )
                     ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'p.personaid')
-                    ->where('p.personaid', $exists->personaid)
+                    ->where('p.numero', $dni)
                     ->first();
             }
 
