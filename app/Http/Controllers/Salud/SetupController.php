@@ -8,6 +8,22 @@ use Illuminate\Support\Facades\DB;
 
 class SetupController extends Controller
 {
+    public function getEdificios()
+    {
+        $results = DB::table('basic.edificio as e')
+            ->select(
+                'e.edificioid',
+                'e.nombre'
+            )
+            ->get();
+
+        return response()->json([
+            "status" => true,
+            "message" => "success",
+            "data" => $results
+        ]);
+    }
+
     public function getMedicos()
     {
         $results = DB::table('salud.medico as m')

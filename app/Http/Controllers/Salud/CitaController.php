@@ -50,13 +50,16 @@ class CitaController extends Controller
                 'e.nombre as especialidad',
                 'e2.nombre as edificio',
                 'ec.nombre as estado',
-                'ec.abreviatura as estado_abreviatura'
+                'ec.abreviatura as estado_abreviatura',
+                'cc.consultaid'
             )
             ->join('salud.medico as m', 'm.medicoid', '=', 'c.medicoid')
             ->join('salud.especialidad as e', 'e.especialidadid', '=', 'c.especialidadid')
             ->join('basic.edificio as e2', 'e2.edificioid', '=', 'c.edificioid')
             ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'c.estadoid')
-            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'c.pacienteid');
+            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'c.pacienteid')
+            ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid')
+            ->join('salud.consulta as cc', 'cc.citaid', '=', 'c.citaid');
 
         if ($fecha_desde && $fecha_hasta) {
             $results = $results->whereBetween('c.fecha', [$fecha_desde, $fecha_hasta]);
@@ -73,7 +76,8 @@ class CitaController extends Controller
         if ($paciente) {
             $results = $results
                 ->whereRaw("upper(replace(coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat,'') || coalesce(pn.nombre, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
-                ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))");
+                ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
+                ->orWhereRaw("upper(p.numero) like upper(replace('%$paciente%',' ',''))");
         }
 
         $results = $results
@@ -135,7 +139,7 @@ class CitaController extends Controller
 
     public function addCita(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             "pacienteid" => 'required|numeric',
             "tiposervicioid" => 'required|numeric',
             "medicoid" => 'required|numeric',
@@ -151,15 +155,15 @@ class CitaController extends Controller
         DB::beginTransaction();
         try {
             $jResponse = Cita::create([
-                'pacienteid' => $request->pacienteid,
-                'tiposervicioid' => $request->tiposervicioid,
-                'medicoid' => $request->medicoid,
-                'especialidadid' => $request->especialidadid,
-                'fecha' => $request->fecha,
-                'hora' => $request->hora,
-                'costo' => $request->costo,
+                'pacienteid' => $validated['pacienteid'],
+                'tiposervicioid' => $validated['tiposervicioid'],
+                'medicoid' => $validated['medicoid'],
+                'especialidadid' => $validated['especialidadid'],
+                'fecha' => $validated['fecha'],
+                'hora' => $validated['hora'],
+                'costo' => $validated['costo'],
                 'estadoid' => 1,
-                'observacion' => $request->observacion,
+                'observacion' => $validated['observacion'],
 
                 // defaults
                 'registro' => Carbon::now(),
@@ -202,7 +206,7 @@ class CitaController extends Controller
 
     public function updateCita(Request $request, $citaid)
     {
-        $request->validate([
+        $validated = $request->validate([
             "pacienteid" => 'required|numeric',
             "tiposervicioid" => 'required|numeric',
             "medicoid" => 'required|numeric',
@@ -218,15 +222,15 @@ class CitaController extends Controller
         DB::beginTransaction();
         try {
             Cita::where('citaid', $citaid)->update([
-                'pacienteid' => $request->pacienteid,
-                'tiposervicioid' => $request->tiposervicioid,
-                'medicoid' => $request->medicoid,
-                'especialidadid' => $request->especialidadid,
-                'fecha' => $request->fecha,
-                'hora' => $request->hora,
-                'costo' => $request->costo,
+                'pacienteid' => $validated['pacienteid'],
+                'tiposervicioid' => $validated['tiposervicioid'],
+                'medicoid' => $validated['medicoid'],
+                'especialidadid' => $validated['especialidadid'],
+                'fecha' => $validated['fecha'],
+                'hora' => $validated['hora'],
+                'costo' => $validated['costo'],
                 'estadoid' => 1,
-                'observacion' => $request->observacion,
+                'observacion' => $validated['observacion'],
 
                 // defaults
                 'edificioid' => 1,
@@ -258,7 +262,7 @@ class CitaController extends Controller
 
     public function updateStatusCita(Request $request, $citaid)
     {
-        $request->validate([
+        $validated = $request->validate([
             "estadoid" => 'required|numeric',
         ]);
 
@@ -267,7 +271,7 @@ class CitaController extends Controller
         DB::beginTransaction();
         try {
             Cita::where('citaid', $citaid)->update([
-                'estadoid' => $request->estadoid,
+                'estadoid' => $validated['estadoid'],
 
                 // defaults
                 'edificioid' => 1,

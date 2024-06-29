@@ -3,13 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\common\CommonController;
+use App\Http\Controllers\PDFController;
 use App\Http\Controllers\Salud\CitaController;
 use App\Http\Controllers\Salud\ConsultaController;
+use App\Http\Controllers\Salud\HistoriaClinicaController;
 use App\Http\Controllers\Salud\MedicoController;
 use App\Http\Controllers\Salud\OdontogramaController;
 use App\Http\Controllers\Salud\PersonaController;
 use App\Http\Controllers\Salud\RecetaController;
 use App\Http\Controllers\Salud\SetupController;
+
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -27,6 +30,7 @@ Route::group(['middleware' => ['auth:api']], function () {
 
     Route::prefix('salud')->group(function () {
         // Setup
+        Route::get('building', [SetupController::class, 'getEdificios']);
         Route::get('doctor', [SetupController::class, 'getMedicos']);
         Route::get('types-service', [SetupController::class, 'getTiposServicio']);
         Route::get('types-speciality', [SetupController::class, 'getTiposEspecialidad']);
@@ -51,9 +55,12 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::post('consultation/{consultaid}/odontogram', [ConsultaController::class, 'addOdontogramConsultation']);
         Route::patch('consultation/{consultaid}/odontogram/{piezaid}', [ConsultaController::class, 'patchOdontogramConsultation']);
         Route::delete('consultation/{consultaid}/odontogram/{piezaid}', [ConsultaController::class, 'deleteOdontogramConsultation']);
+        Route::get('consultation/{consultaid}/odontogram-pdf', [PDFController::class, 'generatePDF']); /* PDF */
 
         Route::get('recipe', [RecetaController::class, 'getRecipes']);
         Route::post('recipe', [RecetaController::class, 'addRecipe']);
         Route::delete('recipe/{recetaid}', [RecetaController::class, 'deleteRecipe']);
+
+        Route::get('result', [HistoriaClinicaController::class, 'getClinicalHistory']);
     });
 });

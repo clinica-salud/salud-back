@@ -38,7 +38,9 @@ class ConsultaController extends Controller
             ->join('salud.medico as m', 'm.medicoid', '=', 'cc.medicoid')
             ->join('salud.especialidad as e', 'e.especialidadid', '=', 'cc.especialidadid')
             ->join('basic.edificio as e2', 'e2.edificioid', '=', 'cc.edificioid')
-            ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'cc.estadoid');
+            ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'cc.estadoid')
+            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'cc.pacienteid')
+            ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid');
 
         if ($fecha_desde && $fecha_hasta) {
             $results = $results->whereBetween('cc.fecha', [$fecha_desde, $fecha_hasta]);
@@ -51,7 +53,8 @@ class ConsultaController extends Controller
         if ($paciente) {
             $results = $results
                 ->whereRaw("upper(replace(coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat,'') || coalesce(pn.nombre, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
-                ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))");
+                ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
+                ->orWhereRaw("upper(p.numero) like upper(replace('%$paciente%',' ',''))");
         }
 
         $results = $results->orderBy('c.consultaid', 'desc')->get();
@@ -66,7 +69,27 @@ class ConsultaController extends Controller
     public function getOdontogramConsultation($consultaid)
     {
         $consulta = DB::table('salud.consulta as c')
-            ->select('*')->where('c.consultaid', '=', $consultaid)->first();
+            ->select(
+                'c.consultaid',
+                'c.anamnesis',
+                'cc.citaid',
+                'cc.pacienteid',
+                'cc.fecha',
+                'cc.observacion',
+                'pn.ape_pat as paciente_ape_pat',
+                'pn.ape_mat as paciente_ape_mat',
+                'pn.nombre as paciente_nombre',
+                'pn.sexo',
+                'pn.nacimiento',
+                'pn2.ape_pat as medico_ape_pat',
+                'pn2.ape_mat as medico_ape_mat',
+                'pn2.nombre as medico_nombre',
+            )
+            ->join('salud.cita as cc', 'cc.citaid', '=', 'c.citaid')
+            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'cc.pacienteid')
+            ->join('basic.persona_natural as pn2', 'pn2.personaid', '=', 'cc.medicoid')
+            ->where('c.consultaid', '=', $consultaid)
+            ->first();
 
         $results = DB::table('salud.consulta_odontograma as co')
             ->select(
