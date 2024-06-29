@@ -113,7 +113,7 @@
 <body>
     <header class="header">
         <div class="logo">
-            <img src="{{ public_path('assets/images/logo_name.png') }}" width="250" alt="Logo">
+            <img src="{{ public_path('images/logo_name.png') }}" width="250" alt="Logo">
         </div>
         <div class="info">
             <h4>HISTORIA CLÍNICA N° {{ $consulta->consultaid }}</h4>
@@ -133,7 +133,7 @@
     </section>
     <section class="image-section">
         <h2>ODONTOGRAMA</h2>
-        <img src="{{ public_path('assets/images/odontograma.png') }}" width="90%" alt="Odontograma">
+        <img src="{{ public_path('images/odontograma.png') }}" width="90%" alt="Odontograma">
     </section>
     <section class="pacient">
         <h2>OBSERVACIONES</h2>
