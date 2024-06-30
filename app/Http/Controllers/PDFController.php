@@ -87,9 +87,9 @@ class PDFController extends Controller
             ->get();
 
         $pdf = Pdf::loadView('pdf', ['consulta' => $consulta, 'diagnosis' => $diagnosis, 'treatments' => $treatments, 'recipes' => $recipes]);
-        // return $pdf->download('odontograma.pdf');
+        return $pdf->download('odontograma.pdf');
 
         // $pdf = Pdf::loadView('pdf');
-        return $pdf->stream('odontograma.pdf');
+        // return $pdf->stream('odontograma.pdf');
     }
 }

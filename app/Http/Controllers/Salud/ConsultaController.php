@@ -40,7 +40,8 @@ class ConsultaController extends Controller
             ->join('basic.edificio as e2', 'e2.edificioid', '=', 'cc.edificioid')
             ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'cc.estadoid')
             ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'cc.pacienteid')
-            ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid');
+            ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid')
+            ->where('cc.estadoid', '!=', 3);
 
         if ($fecha_desde && $fecha_hasta) {
             $results = $results->whereBetween('cc.fecha', [$fecha_desde, $fecha_hasta]);

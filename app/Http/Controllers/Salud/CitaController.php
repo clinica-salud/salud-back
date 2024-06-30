@@ -49,6 +49,7 @@ class CitaController extends Controller
                 DB::raw("(SELECT CONCAT(pn2.nombre, ' ', pn2.ape_pat, ' ', pn2.ape_mat) FROM basic.persona_natural pn2 WHERE pn2.personaid = c.medicoid) as medico"),
                 'e.nombre as especialidad',
                 'e2.nombre as edificio',
+                'ec.estadoid',
                 'ec.nombre as estado',
                 'ec.abreviatura as estado_abreviatura',
                 'cc.consultaid'
