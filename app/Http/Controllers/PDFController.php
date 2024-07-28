@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PDFController extends Controller
 {
@@ -88,8 +86,5 @@ class PDFController extends Controller
 
         $pdf = Pdf::loadView('pdf', ['consulta' => $consulta, 'diagnosis' => $diagnosis, 'treatments' => $treatments, 'recipes' => $recipes]);
         return $pdf->download('odontograma.pdf');
-
-        // $pdf = Pdf::loadView('pdf');
-        // return $pdf->stream('odontograma.pdf');
     }
 }

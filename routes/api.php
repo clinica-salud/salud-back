@@ -7,10 +7,10 @@ use App\Http\Controllers\PDFController;
 use App\Http\Controllers\Salud\CitaController;
 use App\Http\Controllers\Salud\ConsultaController;
 use App\Http\Controllers\Salud\HistoriaClinicaController;
-use App\Http\Controllers\Salud\MedicoController;
 use App\Http\Controllers\Salud\OdontogramaController;
 use App\Http\Controllers\Salud\PersonaController;
 use App\Http\Controllers\Salud\RecetaController;
+use App\Http\Controllers\Salud\ReporteController;
 use App\Http\Controllers\Salud\SetupController;
 
 
@@ -62,5 +62,10 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::delete('recipe/{recetaid}', [RecetaController::class, 'deleteRecipe']);
 
         Route::get('result', [HistoriaClinicaController::class, 'getClinicalHistory']);
+
+        // Reports
+        Route::get('report', [ReporteController::class, 'getReporte']);
+        Route::get('report-daily-activity', [ReporteController::class, 'getActividadDiariaPorAnho']);
+        Route::get('report-treatment/{anho}', [ReporteController::class, 'getTratamientosPorAnho']);
     });
 });
