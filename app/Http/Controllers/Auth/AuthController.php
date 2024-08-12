@@ -78,6 +78,40 @@ class AuthController extends Controller
         ]);
     }
 
+    // public function registerUser(Request $request)
+    // {
+    //     $request->validate([
+    //         'name' => 'required|string',
+    //         'personaid' => 'required|numeric',
+    //         'email' => 'required|string|email|unique:users',
+    //         'password' => 'required|string',
+    //     ]);
+
+    //     DB::beginTransaction();
+    //     try {
+    //         User::create([
+    //             'name' => $request->name,
+    //             'personaid' => $request->personaid,
+    //             'email' => $request->email,
+    //             'password' => bcrypt($request->password)
+    //         ]);
+    //         DB::commit();
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $e->getMessage(),
+    //             'data' =>  null
+    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+
+    //     return response()->json([
+    //         "status" => true,
+    //         "message" => "User registered successfully",
+    //         "data" => []
+    //     ]);
+    // }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -114,10 +148,24 @@ class AuthController extends Controller
     public function profile()
     {
         $userData = auth()->user();
+
+        $accessMenu  = DB::select('SELECT * FROM basic.pamenusalud_leer_porusuario(?)', [$userData->personaid]);
+
+        $roles = DB::table('basic.persona_rol as pr')
+            ->select('r.rolid', 'r.nombre as rol')
+            ->join('basic.rol as r', 'r.rolid', '=', 'pr.rolid')
+            ->where('personaid', $userData->personaid)
+            ->where('estado', true)
+            ->get();
+
         return response()->json([
             "status" => true,
             "message" => "Profile information",
-            "data" => $userData
+            "data" => [
+                "user" => $userData,
+                "accessMenu" => $accessMenu,
+                "roles" => $roles
+            ]
         ]);
     }
 

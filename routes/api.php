@@ -16,6 +16,7 @@ use App\Http\Controllers\Salud\SetupController;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
+    // Route::post('register-user', [AuthController::class, 'registerUser']);
     Route::post('login', [AuthController::class, 'login']);
     Route::get('tipoid', [CommonController::class, 'getTipoid']);
 });
@@ -48,6 +49,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('teeth/{tipoodontogramaid}', [OdontogramaController::class, 'getTeeth']);
         Route::get('numero-pieza/{tipoodontogramaid}', [OdontogramaController::class, 'getPiezas']);
         Route::get('face-type', [OdontogramaController::class, 'getFaceType']);
+        Route::get('phase', [OdontogramaController::class, 'getPhase']);
         Route::get('type-treatment', [OdontogramaController::class, 'getTypeTreatment']);
 
         Route::get('consultation', [ConsultaController::class, 'getConsultations']);

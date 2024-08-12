@@ -8,12 +8,19 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ConsultaController extends Controller
 {
     public function getConsultations(Request $request)
     {
+        $personaid = auth()->user()->personaid;
+
+        $roleid = DB::table('basic.persona_rol as pr')
+            ->select('pr.rolid')
+            ->where('pr.personaid', $personaid)
+            ->where('pr.rolid', 14)
+            ->value('pr.rolid');
+
         $fecha_desde = $request->fecha_desde;
         $fecha_hasta = $request->fecha_hasta;
         $paciente = $request->paciente;
@@ -21,44 +28,48 @@ class ConsultaController extends Controller
 
         $paciente = strtoupper($paciente);
 
-        $results = DB::table('salud.consulta as c')
-            ->select(
-                'c.consultaid',
-                'cc.citaid',
-                'cc.fecha',
-                'cc.hora',
-                DB::raw("(SELECT CONCAT(pn.nombre, ' ', pn.ape_pat, ' ', pn.ape_mat) FROM basic.persona_natural pn WHERE pn.personaid = cc.pacienteid) as paciente"),
-                DB::raw("(SELECT CONCAT(pn2.nombre, ' ', pn2.ape_pat, ' ', pn2.ape_mat) FROM basic.persona_natural pn2 WHERE pn2.personaid = cc.medicoid) as medico"),
-                'e.nombre as especialidad',
-                'e2.nombre as edificio',
-                'ec.nombre as estado',
-                'ec.abreviatura as estado_abreviatura'
-            )
-            ->join('salud.cita as cc', 'cc.citaid', '=', 'c.citaid')
-            ->join('salud.medico as m', 'm.medicoid', '=', 'cc.medicoid')
-            ->join('salud.especialidad as e', 'e.especialidadid', '=', 'cc.especialidadid')
-            ->join('basic.edificio as e2', 'e2.edificioid', '=', 'cc.edificioid')
-            ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'cc.estadoid')
-            ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'cc.pacienteid')
-            ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid')
-            ->where('cc.estadoid', '!=', 3);
+        if ($roleid == 14) {
+            $results = DB::table('salud.consulta as c')
+                ->select(
+                    'c.consultaid',
+                    'cc.citaid',
+                    'cc.fecha',
+                    'cc.hora',
+                    DB::raw("(SELECT CONCAT(pn.nombre, ' ', pn.ape_pat, ' ', pn.ape_mat) FROM basic.persona_natural pn WHERE pn.personaid = cc.pacienteid) as paciente"),
+                    DB::raw("(SELECT CONCAT(pn2.nombre, ' ', pn2.ape_pat, ' ', pn2.ape_mat) FROM basic.persona_natural pn2 WHERE pn2.personaid = cc.medicoid) as medico"),
+                    'e.nombre as especialidad',
+                    'e2.nombre as edificio',
+                    'ec.nombre as estado',
+                    'ec.abreviatura as estado_abreviatura'
+                )
+                ->join('salud.cita as cc', 'cc.citaid', '=', 'c.citaid')
+                ->join('salud.medico as m', 'm.medicoid', '=', 'cc.medicoid')
+                ->join('salud.especialidad as e', 'e.especialidadid', '=', 'cc.especialidadid')
+                ->join('basic.edificio as e2', 'e2.edificioid', '=', 'cc.edificioid')
+                ->join('salud.estado_cita as ec', 'ec.estadoid', '=', 'cc.estadoid')
+                ->join('basic.persona_natural as pn', 'pn.personaid', '=', 'cc.pacienteid')
+                ->join('basic.personaid as p', 'p.personaid', '=', 'pn.personaid')
+                ->where('cc.estadoid', '!=', 3);
 
-        if ($fecha_desde && $fecha_hasta) {
-            $results = $results->whereBetween('cc.fecha', [$fecha_desde, $fecha_hasta]);
+            if ($fecha_desde && $fecha_hasta) {
+                $results = $results->whereBetween('cc.fecha', [$fecha_desde, $fecha_hasta]);
+            }
+
+            if ($estadoid) {
+                $results = $results->where('cc.estadoid', $estadoid);
+            }
+
+            if ($paciente) {
+                $results = $results
+                    ->whereRaw("upper(replace(coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat,'') || coalesce(pn.nombre, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
+                    ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
+                    ->orWhereRaw("upper(p.numero) like upper(replace('%$paciente%',' ',''))");
+            }
+
+            $results = $results->orderBy('c.consultaid', 'desc')->get();
+        } else {
+            $results = [];
         }
-
-        if ($estadoid) {
-            $results = $results->where('cc.estadoid', $estadoid);
-        }
-
-        if ($paciente) {
-            $results = $results
-                ->whereRaw("upper(replace(coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat,'') || coalesce(pn.nombre, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
-                ->orWhereRaw("upper(replace(coalesce(pn.nombre,'') || coalesce(pn.ape_pat,'') || coalesce(pn.ape_mat, ''),' ', '')) like upper(replace('%$paciente%',' ',''))")
-                ->orWhereRaw("upper(p.numero) like upper(replace('%$paciente%',' ',''))");
-        }
-
-        $results = $results->orderBy('c.consultaid', 'desc')->get();
 
         return response()->json([
             "status" => true,
@@ -96,6 +107,8 @@ class ConsultaController extends Controller
             ->select(
                 'co.consultaid',
                 'co.piezaid',
+                'co.faseodontogramaid',
+                'fo.nombre as fase_odontograma',
                 'co.detalle',
                 'co.observacion',
                 'onp.numero as pieza_numero',
@@ -107,6 +120,7 @@ class ConsultaController extends Controller
             ->join('salud.odontograma_numero_pieza as onp', 'onp.piezaid', '=', 'co.piezaid')
             ->join('salud.tipo_tratamiento as tt', 'tt.tipotratamientoid', '=', 'co.tipotratamientoid')
             ->join('salud.consulta as c', 'c.consultaid', '=', 'co.consultaid')
+            ->join('salud.fase_odontograma as fo', 'fo.faseodontogramaid', '=', 'co.faseodontogramaid')
             ->leftJoin('salud.tipo_cara as tc', 'tc.tipocaraid', '=', 'co.tipocaraid')
             ->where('co.consultaid', '=', $consultaid)
             ->get();
@@ -127,12 +141,15 @@ class ConsultaController extends Controller
             'piezaid' => 'required|numeric',
             'tipotratamientoid' => 'required|numeric',
             'tipocaraid' => 'nullable|numeric',
-            'es_tratamiento' => 'required|boolean',
             'observacion' => 'nullable|string',
-            'imagen' => 'nullable|string',
+            'faseodontogramaid' => 'required|numeric',
         ]);
 
-        $validated['consultaid'] = $consultaid;
+        $validated = array_merge($validated, [
+            'consultaid' => $consultaid,
+            'imagen' => '',
+            'es_tratamiento' => true,
+        ]);
 
         DB::beginTransaction();
         try {
@@ -159,6 +176,7 @@ class ConsultaController extends Controller
     {
         $validated = $request->validate([
             'es_tratamiento' => 'required|boolean',
+            'faseodontogramaid' => 'required|numeric',
         ]);
 
         DB::beginTransaction();

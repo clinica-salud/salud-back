@@ -13,19 +13,69 @@ class ReporteController extends Controller
         $year = $request->year;
         $month = $request->month;
 
-        $citas = DB::table('salud.cita as c')
+        // $citas = DB::table('salud.cita as c')
+        //     ->select(DB::raw('COUNT(c.citaid) as total_citas'))
+        //     ->whereYear('c.fecha', $year)
+        //     ->whereMonth('c.fecha', $month)
+        //     ->get();
+
+        $currentMonthCita = DB::table('salud.cita as c')
             ->select(DB::raw('COUNT(c.citaid) as total_citas'))
             ->whereYear('c.fecha', $year)
             ->whereMonth('c.fecha', $month)
             ->get();
 
-        $medicos = DB::table('salud.medico as m')
+        $previousMonthCita = DB::table('salud.cita as c')
+            ->select(DB::raw('COUNT(c.citaid) as total_citas'))
+            ->whereYear('c.fecha', $year)
+            ->whereMonth('c.fecha', $month - 1)
+            ->get();
+
+        $citas = [
+            'current' => $currentMonthCita->first()->total_citas,
+            'previous' => $previousMonthCita->first()->total_citas,
+            'diffPercent' => $previousMonthCita->first()->total_citas != 0
+                ? (($currentMonthCita->first()->total_citas - $previousMonthCita->first()->total_citas) / $previousMonthCita->first()->total_citas) * 100
+                : 0,
+            'status' => ($currentMonthCita->first()->total_citas > $previousMonthCita->first()->total_citas) ? 'up' : 'down'
+        ];
+
+        // $medicos = DB::table('salud.medico as m')
+        //     ->select(DB::raw('COUNT(m.medicoid) as total_medicos'))
+        //     ->whereYear('m.registro', $year)
+        //     ->whereMonth('m.registro', $month)
+        //     ->get();
+
+        $currentMonthMedicos = DB::table('salud.medico as m')
             ->select(DB::raw('COUNT(m.medicoid) as total_medicos'))
             ->whereYear('m.registro', $year)
             ->whereMonth('m.registro', $month)
             ->get();
 
-        $tratamientos = DB::table('salud.consulta_odontograma as o')
+        $previousMonthMedicos = DB::table('salud.medico as m')
+            ->select(DB::raw('COUNT(m.medicoid) as total_medicos'))
+            ->whereYear('m.registro', $year)
+            ->whereMonth('m.registro', $month - 1)
+            ->get();
+
+        $medicos = [
+            'current' => $currentMonthMedicos->first()->total_medicos,
+            'previous' => $previousMonthMedicos->first()->total_medicos,
+            'diffPercent' => $previousMonthMedicos->first()->total_medicos != 0
+                ? (($currentMonthMedicos->first()->total_medicos - $previousMonthMedicos->first()->total_medicos) / $previousMonthMedicos->first()->total_medicos) * 100
+                : 0,
+            'status' => ($currentMonthMedicos->first()->total_medicos > $previousMonthMedicos->first()->total_medicos) ? 'up' : 'down'
+        ];
+
+        // $tratamientos = DB::table('salud.consulta_odontograma as o')
+        //     ->select(DB::raw('COUNT(o.tipotratamientoid) as total_tratamientos'))
+        //     ->join('salud.consulta as c', 'c.consultaid', '=', 'o.consultaid')
+        //     ->whereYear('c.registro', $year)
+        //     ->whereMonth('c.registro', $month)
+        //     ->where('o.es_tratamiento', true)
+        //     ->get();
+
+        $currentMonthTratamientos = DB::table('salud.consulta_odontograma as o')
             ->select(DB::raw('COUNT(o.tipotratamientoid) as total_tratamientos'))
             ->join('salud.consulta as c', 'c.consultaid', '=', 'o.consultaid')
             ->whereYear('c.registro', $year)
@@ -33,11 +83,49 @@ class ReporteController extends Controller
             ->where('o.es_tratamiento', true)
             ->get();
 
-        $pagos = DB::table('salud.cita as c')
+        $previousMonthTratamientos = DB::table('salud.consulta_odontograma as o')
+            ->select(DB::raw('COUNT(o.tipotratamientoid) as total_tratamientos'))
+            ->join('salud.consulta as c', 'c.consultaid', '=', 'o.consultaid')
+            ->whereYear('c.registro', $year)
+            ->whereMonth('c.registro', $month - 1)
+            ->where('o.es_tratamiento', true)
+            ->get();
+
+        $tratamientos = [
+            'current' => $currentMonthTratamientos->first()->total_tratamientos,
+            'previous' => $previousMonthTratamientos->first()->total_tratamientos,
+            'diffPercent' => $previousMonthTratamientos->first()->total_tratamientos != 0
+                ? (($currentMonthTratamientos->first()->total_tratamientos - $previousMonthTratamientos->first()->total_tratamientos) / $previousMonthTratamientos->first()->total_tratamientos) * 100
+                : 0,
+            'status' => ($currentMonthTratamientos->first()->total_tratamientos > $previousMonthTratamientos->first()->total_tratamientos) ? 'up' : 'down'
+        ];
+
+        // $pagos = DB::table('salud.cita as c')
+        //     ->select(DB::raw('SUM(c.costo) as total_pagos'))
+        //     ->whereYear('c.fecha', $year)
+        //     ->whereMonth('c.fecha', $month)
+        //     ->get();
+
+        $currentMonthPagos = DB::table('salud.cita as c')
             ->select(DB::raw('SUM(c.costo) as total_pagos'))
             ->whereYear('c.fecha', $year)
             ->whereMonth('c.fecha', $month)
             ->get();
+
+        $previousMonthPagos = DB::table('salud.cita as c')
+            ->select(DB::raw('SUM(c.costo) as total_pagos'))
+            ->whereYear('c.fecha', $year)
+            ->whereMonth('c.fecha', $month - 1)
+            ->get();
+
+        $pagos = [
+            'current' => $currentMonthPagos->first()->total_pagos,
+            'previous' => $previousMonthPagos->first()->total_pagos,
+            'diffPercent' => $previousMonthPagos->first()->total_pagos != 0
+                ? (($currentMonthPagos->first()->total_pagos - $previousMonthPagos->first()->total_pagos) / $previousMonthPagos->first()->total_pagos) * 100
+                : 0,
+            'status' => ($currentMonthPagos->first()->total_pagos > $previousMonthPagos->first()->total_pagos) ? 'up' : 'down'
+        ];
 
         $pacientesSexo = DB::table('salud.cita as c')
             ->select(
@@ -63,10 +151,10 @@ class ReporteController extends Controller
             ->get();
 
         $results = [
-            'citas' => $citas->first()->total_citas,
-            'medicos' => $medicos->first()->total_medicos,
-            'tratamientos' => $tratamientos->first()->total_tratamientos,
-            'pagos' => $pagos->first()->total_pagos,
+            'citas' => $citas,
+            'medicos' => $medicos,
+            'tratamientos' => $tratamientos,
+            'pagos' => $pagos,
             'pacientesSexo' => $pacientesSexo,
             // 'citasDiarias' => $dailyAppointments,
             'tipoTratamientos' => $tipoTratamientos

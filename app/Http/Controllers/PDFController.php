@@ -53,10 +53,13 @@ class PDFController extends Controller
             ->select(
                 'co.consultaid',
                 'co.piezaid',
+                'co.faseodontogramaid',
+                'fo.nombre as fase_odontograma',
                 'co.detalle',
                 'co.observacion',
                 'onp.numero as pieza_numero',
                 'onp.fila as pieza_fila',
+                DB::raw('(onp.numero || onp.fila) as pieza'),
                 'tt.nombre as tipo_tratamiento',
                 'tc.nombre as tipo_cara',
                 'co.es_tratamiento'
@@ -64,6 +67,7 @@ class PDFController extends Controller
             ->join('salud.odontograma_numero_pieza as onp', 'onp.piezaid', '=', 'co.piezaid')
             ->join('salud.tipo_tratamiento as tt', 'tt.tipotratamientoid', '=', 'co.tipotratamientoid')
             ->join('salud.consulta as c', 'c.consultaid', '=', 'co.consultaid')
+            ->join('salud.fase_odontograma as fo', 'fo.faseodontogramaid', '=', 'co.faseodontogramaid')
             ->leftJoin('salud.tipo_cara as tc', 'tc.tipocaraid', '=', 'co.tipocaraid')
             ->where('co.consultaid', '=', $consultaid)
             ->where('co.es_tratamiento', true)
@@ -84,7 +88,14 @@ class PDFController extends Controller
             ->where('r.citaid', '=', $consulta->citaid)
             ->get();
 
-        $pdf = Pdf::loadView('pdf', ['consulta' => $consulta, 'diagnosis' => $diagnosis, 'treatments' => $treatments, 'recipes' => $recipes]);
+
+
+        $pdf = Pdf::loadView('pdf', [
+            'consulta' => $consulta,
+            'diagnosis' => $diagnosis,
+            'treatments' => $treatments,
+            'recipes' => $recipes,
+        ]);
         return $pdf->download('odontograma.pdf');
     }
 }

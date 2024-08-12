@@ -56,6 +56,17 @@ class OdontogramaController extends Controller
         ]);
     }
 
+    public function getPhase()
+    {
+        $results = DB::table('salud.fase_odontograma')->orderBy('orden')->get();
+
+        return response()->json([
+            "status" => true,
+            "message" => "success",
+            "data" => $results
+        ]);
+    }
+
     public function getTypeTreatment()
     {
         $results = DB::table('salud.tipo_tratamiento')->get();
