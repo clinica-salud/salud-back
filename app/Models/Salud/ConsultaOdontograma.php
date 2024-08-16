@@ -13,6 +13,7 @@ class ConsultaOdontograma extends Model
     protected $fillable = [
         'consultaid',
         'piezaid',
+        'faseodontogramaid',
         'tipotratamientoid',
         'tipocaraid',
         'es_tratamiento',

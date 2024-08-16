@@ -7,15 +7,16 @@ use App\Http\Controllers\PDFController;
 use App\Http\Controllers\Salud\CitaController;
 use App\Http\Controllers\Salud\ConsultaController;
 use App\Http\Controllers\Salud\HistoriaClinicaController;
-use App\Http\Controllers\Salud\MedicoController;
 use App\Http\Controllers\Salud\OdontogramaController;
 use App\Http\Controllers\Salud\PersonaController;
 use App\Http\Controllers\Salud\RecetaController;
+use App\Http\Controllers\Salud\ReporteController;
 use App\Http\Controllers\Salud\SetupController;
 
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
+    // Route::post('register-user', [AuthController::class, 'registerUser']);
     Route::post('login', [AuthController::class, 'login']);
     Route::get('tipoid', [CommonController::class, 'getTipoid']);
 });
@@ -48,6 +49,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::get('teeth/{tipoodontogramaid}', [OdontogramaController::class, 'getTeeth']);
         Route::get('numero-pieza/{tipoodontogramaid}', [OdontogramaController::class, 'getPiezas']);
         Route::get('face-type', [OdontogramaController::class, 'getFaceType']);
+        Route::get('phase', [OdontogramaController::class, 'getPhase']);
         Route::get('type-treatment', [OdontogramaController::class, 'getTypeTreatment']);
 
         Route::get('consultation', [ConsultaController::class, 'getConsultations']);
@@ -62,5 +64,10 @@ Route::group(['middleware' => ['auth:api']], function () {
         Route::delete('recipe/{recetaid}', [RecetaController::class, 'deleteRecipe']);
 
         Route::get('result', [HistoriaClinicaController::class, 'getClinicalHistory']);
+
+        // Reports
+        Route::get('report', [ReporteController::class, 'getReporte']);
+        Route::get('report-daily-activity', [ReporteController::class, 'getActividadDiariaPorAnho']);
+        Route::get('report-treatment/{anho}', [ReporteController::class, 'getTratamientosPorAnho']);
     });
 });
