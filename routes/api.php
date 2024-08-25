@@ -33,6 +33,7 @@ Route::group(['middleware' => ['auth:api']], function () {
         // Setup
         Route::get('building', [SetupController::class, 'getEdificios']);
         Route::get('doctor', [SetupController::class, 'getMedicos']);
+        Route::get('doctor/{especialidadid}', [SetupController::class, 'getMedicosByEspecialidad']);
         Route::get('types-service', [SetupController::class, 'getTiposServicio']);
         Route::get('types-speciality', [SetupController::class, 'getTiposEspecialidad']);
         Route::get('types-treatment', [SetupController::class, 'getTiposTratamiento']);
