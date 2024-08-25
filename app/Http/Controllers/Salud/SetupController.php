@@ -29,11 +29,29 @@ class SetupController extends Controller
         $results = DB::table('salud.medico as m')
             ->select(
                 'm.medicoid',
+                DB::raw("(SELECT CONCAT(pn.nombre, ' ', pn.ape_pat, ' ', pn.ape_mat) FROM basic.persona_natural pn WHERE pn.personaid = m.medicoid) as nombre_completo")
+            )
+            ->get();
+
+        return response()->json([
+            "status" => true,
+            "message" => "success",
+            "data" => $results
+        ]);
+    }
+
+    public function getMedicosByEspecialidad($especialidadid)
+    {
+        $results = DB::table('salud.medico as m')
+            ->select(
+                'm.medicoid',
                 DB::raw("(SELECT CONCAT(pn.nombre, ' ', pn.ape_pat, ' ', pn.ape_mat) FROM basic.persona_natural pn WHERE pn.personaid = m.medicoid) as nombre_completo"),
+                'e.especialidadid',
                 'e.nombre as especialidad'
             )
             ->join('salud.medico_especialidad as me', 'me.medicoid', '=', 'm.medicoid')
             ->join('salud.especialidad as e', 'e.especialidadid', '=', 'me.especialidadid')
+            ->where('e.especialidadid', $especialidadid)
             ->get();
 
         return response()->json([
